@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+    ip-geo-backend:
+        container_name: ip-geo-backend
+        depends_on:
+            - ip-geo-mysql
+        build: ./docker
+        volumes:
+            - ./:/var/www/html
+        ports:
+            - 8000:8000
+            
+    ip-geo-mysql:
+        container_name: ip-geo-mysql
+        image: mysql
+        environment:
+            - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+            - MYSQL_USER=${DB_USERNAME}
+            - MYSQL_PASSWORD=${DB_PASSWORD}
+            - MYSQL_DATABASE=${DB_DATABASE}
+        volumes:
+            - ./docker/mysql/data:/var/lib/mysql
+            - ./docker/mysql/init_scripts/:/docker-entrypoint-initdb.d
+        ports:
+            - 3306:3306
+
+    ip-geo-phpmyadmin:
+        container_name: ip-geo-phpmyadmin
+        depends_on:
+            - ip-geo-mysql
+        image: phpmyadmin
+        ports:
+            - 8080:80
+        environment:
+            - PMA_ARBITRARY=1
+            - PMA_HOST=ip-geo-mysql
+            - PMA_PORT=3306
+            - PMA_USER=root
+            - PMA_PASSWORD=${DB_PASSWORD}
+            - UPLOAD_LIMIT=50M
+
+networks:
+    bridge:
+        external: true
+        name: bridge
